@@ -219,7 +219,10 @@ def check_upload_args(argc):
 def main():
     today = str(date.today())
     argc = len(sys.argv)
-    err(argc)
+    if argc < 2:
+        print("Incorrect usage, write cptool --help to get info about how to use the program")
+        exit()
+
     petition = sys.argv[1]
     match petition: 
         case "-c":
