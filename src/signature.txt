@@ -1,5 +1,5 @@
 /* 
-Author: Joel Ostos
+Author: Mauricio Orjuela
 Date:  
 Problem:  
 */ 

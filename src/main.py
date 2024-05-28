@@ -22,9 +22,10 @@ def make_tests(problem_name, contest_id, url):
         input_text = '\n'.join(line.get_text(strip=True) for line in input_lines)
 
         output_text = output_div.find('pre').get_text(strip=True)
+        output_text += '\n'
 
         input_name = contest_id + "/" + problem_name + "_input.txt"
-        output_name = contest_id + "/" + problem_name + "_output.txt"
+        output_name = contest_id + "/" + problem_name + "_test.txt"
 
         with open(input_name , "a") as file:
             file.write(input_text)
@@ -90,8 +91,22 @@ def init_contest(contest_id):
 
         make_tests(n_problem, str(contest_id), problem)
 
-#def check_tests():
+def check_tests(problem_id):
+    expected = [] 
+    proposal = []
 
+    with open(problem_id+"_test.txt") as file:
+        expected = file.readlines()
+
+    with open(problem_id+"_out.txt") as file:
+        proposal = file.readlines()
+    cont = 0 
+    for i,j in zip(expected, proposal):
+        cont+=1
+        if i != j:
+            print(f"expected output and yours differ on line {cont}\nexpected: {i}\nproposal: {j}")
+            exit()
+    print("All the tests were successfully completed")
 
 def extract_user(filename):
     tree = ET.parse(filename)
@@ -146,8 +161,9 @@ def upload_file(contest_id, problem_id):
     bfaa = submit_soup.find('input', {'name': 'bfaa'})['value']
 
     solution_name = str(problem_id) + ".cpp"
+    source_code = " "
     with open(solution_name, "r") as file:
-        source_code = file.readlines()
+        source_code += ''.join(file.readlines())
 
     language_id = '54' 
 
@@ -168,39 +184,73 @@ def upload_file(contest_id, problem_id):
     else:
         print('Error sending the code')
 
+def get_help():
+    print(''' CP-Maker is an utility that helps you with the contests at codeforces, the usage is:
+        cp-maker has flags, one of those flags must be in front of the cp-maker command, and the available flags are:\n
+-h | --help:            provides this info.\n
+-u | --upload-file:     this flag must be followed by the contest id and the problem id, for example:
+                        I'm doing the 1843 contest in codeforces (the problem id is the url of the contest that you\'re doing)
+                        and it has the problem \'E\', your solution proposal has passed the local tests and you want to upload it
+                        then the command you must write is:
+                                    \'cp-maker -u 1843 E\'
+                        and it\'ll make the magic.\n
+-v | --validate-tests:  this flag must be followed by the problem id, and it will make the compilation command
+                        that is write in your credentials.xml and will test your solution with the codeforces tests.
+                        If your tests are right then it\'ll tell you: 
+                                    "All the tests were successfully completed"
+                        if not:
+                                    "Expected output and yours differ on line {cont}
+                                    expected: {i}
+                                    proposal: {j}"
+          ''')
+
+def check_args(argc):
+    if argc != 3:
+        print("Incorrect usage, write cptool --help to get info about how to use the program")
+        exit()
+
+
+def check_upload_args(argc):
+    if argc != 4:
+        print("Incorrect usage, write cptool --help to get info about how to use the program")
+        exit()
+
+
 def main():
     today = str(date.today())
     argc = len(sys.argv)
-    if argc < 2:
-        print("Incorrect usage, write cptool --help to get info about how to use the program")
-        exit()
+    err(argc)
     petition = sys.argv[1]
     match petition: 
         case "-c":
-            if argc != 3:
-                print("Incorrect usage, write cptool --help to get info about how to use the program")
-                exit()
+            check_args(argc)
             init_contest(str(sys.argv[2]))
         case "--create-files":
-            if argc != 3:
-                print("Incorrect usage, write cptool --help to get info about how to use the program")
-                exit()
+            check_args(argc)
             init_contest(sys.argv[2])
         case "-u":
-            if argc != 4:
-                print("Incorrect usage, write cptool --help to get info about how to use the program")
-                exit()
+            check_upload_args(argc)
             upload_file(sys.argv[2], sys.argv[3])
         case "--upload-file":
-            if argc != 4:
-                print("Incorrect usage, write cptool --help to get info about how to use the program")
-                exit()
+            check_upload_args(argc)
             upload_file(sys.argv[2], sys.argv[3])
-        ##case "-v":
+        case "-v":
+            check_args(argc)
+            check_tests(sys.argv[2])
 
-        ##case "--validate-tests":
-
-
+        case "--validate-tests":
+            check_args(argc)
+            check_tests(sys.argv[2])
+        case "-h":
+            if argc != 2:
+                print("Incorrect usage, write cptool --help or -h to get info about how to use the program")
+                exit()
+            get_help()
+        case "--help":
+            if argc != 2:
+                print("Incorrect usage, write cptool --help or -h to get info about how to use the program")
+                exit()
+            get_help()
 
 if __name__ == "__main__":
     main()
